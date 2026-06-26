@@ -14,7 +14,7 @@ If the Vercel functions aren't deployed, the admin automatically falls back to p
 
 ## Deploy to Vercel (one-time)
 
-1. Go to **vercel.com** → **Add New… → Project** → import the GitHub repo `eduardoquirino290-art/idk-yet`.
+1. Go to **vercel.com** → **Add New… → Project** → import the GitHub repo `eduardoquirino290-art/marketing`.
 2. Framework preset: **Other**. Leave build settings empty (it's static + `/api`).
 3. Add **Environment Variables** (Project → Settings → Environment Variables):
 
@@ -22,7 +22,7 @@ If the Vercel functions aren't deployed, the admin automatically falls back to p
    |------|-------|-------|
    | `GH_TOKEN` | a GitHub PAT with **repo** scope | held server-side only |
    | `ADMIN_PASSWORDS` | `anther2026,eduardo2026` | comma-separated; must match the admin logins |
-   | `GH_REPO` | `eduardoquirino290-art/idk-yet` | optional (this is the default) |
+   | `GH_REPO` | `eduardoquirino290-art/marketing` | optional (this is the default) |
    | `GH_BRANCH` | `main` | optional (default) |
 
 4. **Deploy.** Your site will be live at `https://<project>.vercel.app`.

@@ -2,7 +2,7 @@
 // Reads server-side with the stored token so public visitors never need one.
 // Edge-cached briefly so many viewers polling for updates won't hit GitHub limits.
 module.exports = async (req, res) => {
-  const REPO   = process.env.GH_REPO   || 'eduardoquirino290-art/idk-yet';
+  const REPO   = process.env.GH_REPO   || 'eduardoquirino290-art/marketing';
   const BRANCH = process.env.GH_BRANCH || 'main';
   const token  = process.env.GH_TOKEN;
 

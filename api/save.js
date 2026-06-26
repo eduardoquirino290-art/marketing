@@ -6,7 +6,7 @@ module.exports = async (req, res) => {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const REPO   = process.env.GH_REPO   || 'eduardoquirino290-art/idk-yet';
+  const REPO   = process.env.GH_REPO   || 'eduardoquirino290-art/marketing';
   const BRANCH = process.env.GH_BRANCH || 'main';
   const token  = process.env.GH_TOKEN;
   const valid  = (process.env.ADMIN_PASSWORDS || '')
