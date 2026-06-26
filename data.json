@@ -55,6 +55,10 @@
       "image": ""
     }
   ],
+  "theme": {
+    "accent": "#c8f542",
+    "neon": true
+  },
   "skills": [
     { "label": "Visual Design",   "pct": 97 },
     { "label": "Web Development", "pct": 82 },

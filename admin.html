@@ -126,6 +126,48 @@
     .row2 input { margin-bottom: 0; }
     .form-actions { display: flex; gap: 0.6rem; margin-top: 0.75rem; flex-wrap: wrap; }
 
+    /* ── APPEARANCE ── */
+    .color-field { display: flex; gap: 0.6rem; align-items: center; }
+    .color-field input[type="color"] {
+      width: 48px; height: 42px; padding: 2px; margin-bottom: 0;
+      border-radius: 6px; cursor: pointer; background: var(--bg); flex-shrink: 0;
+    }
+    .color-field input[type="text"] { margin-bottom: 0; font-family: ui-monospace, monospace; }
+
+    .swatches { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+    .swatch {
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 2px solid var(--border); cursor: pointer; padding: 0;
+      transition: transform 0.15s, border-color 0.15s;
+    }
+    .swatch:hover { transform: scale(1.12); }
+    .swatch.active { border-color: var(--text); }
+
+    .toggle-field { display: flex; align-items: center; gap: 0.75rem; }
+    .toggle {
+      position: relative; width: 50px; height: 28px;
+      border-radius: 999px; border: 1px solid var(--border);
+      background: var(--surface2); cursor: pointer; padding: 0;
+      transition: background 0.2s, border-color 0.2s; flex-shrink: 0;
+    }
+    .toggle.on { background: var(--accent); border-color: var(--accent); }
+    .toggle-knob {
+      position: absolute; top: 3px; left: 3px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: var(--muted); transition: transform 0.2s, background 0.2s;
+    }
+    .toggle.on .toggle-knob { transform: translateX(22px); background: #0a0a0a; }
+    .toggle-label { font-size: 0.85rem; font-weight: 600; }
+    .hint { font-size: 0.72rem; color: var(--muted); margin-top: 0.6rem; }
+
+    .preview-bar {
+      display: flex; align-items: center; gap: 0.6rem;
+      margin-top: 1.25rem; padding: 0.8rem 1rem;
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+    }
+    .preview-dot { width: 14px; height: 14px; border-radius: 50%; background: var(--accent); flex-shrink: 0; }
+    .preview-text { font-size: 0.78rem; color: var(--muted); }
+
     /* ── SKILLS ── */
     .skill-edit-list { display: flex; flex-direction: column; gap: 0.6rem; margin-bottom: 1.2rem; }
     .skill-edit-item {
@@ -187,6 +229,42 @@
   </header>
 
   <div class="admin-body">
+
+    <!-- APPEARANCE -->
+    <div class="panel">
+      <div class="panel-head">
+        <div>
+          <h2>Appearance</h2>
+          <p>Set the accent colour and turn the neon glow on or off for a more professional look.</p>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="row2">
+          <div>
+            <label>Accent Colour</label>
+            <div class="color-field">
+              <input type="color" id="t-accent-picker" value="#c8f542" oninput="syncAccent('picker')" />
+              <input type="text" id="t-accent-hex" value="#c8f542" placeholder="#c8f542" oninput="syncAccent('hex')" />
+            </div>
+            <div class="swatches" id="swatches"></div>
+          </div>
+          <div>
+            <label>Neon Glow</label>
+            <div class="toggle-field">
+              <button type="button" class="toggle" id="t-neon" onclick="toggleNeon()" aria-pressed="true">
+                <span class="toggle-knob"></span>
+              </button>
+              <span class="toggle-label" id="t-neon-label">Neon ON</span>
+            </div>
+            <p class="hint">Off = flat, professional styling (no glow effects).</p>
+          </div>
+        </div>
+        <div class="preview-bar" id="preview-bar">
+          <span class="preview-dot"></span>
+          <span class="preview-text">Live preview of the accent colour</span>
+        </div>
+      </div>
+    </div>
 
     <!-- PROJECTS -->
     <div class="panel">
@@ -344,6 +422,7 @@
 
   /* ── POPULATE ── */
   function populateAll() {
+    populateTheme();
     renderProjList();
     renderSkillEditList();
 
@@ -364,6 +443,69 @@
     document.getElementById('a-p1').value = a.p1 || '';
     document.getElementById('a-p2').value = a.p2 || '';
     document.getElementById('a-p3').value = a.p3 || '';
+  }
+
+  /* ── APPEARANCE ── */
+  const PRESETS = ['#c8f542','#42a5f5','#7c5cff','#f55c8a','#ff8c42','#2ecc8f','#e0e0e0','#f5d142'];
+
+  function populateTheme() {
+    data.theme = data.theme || { accent: '#c8f542', neon: true };
+    const accent = data.theme.accent || '#c8f542';
+    document.getElementById('t-accent-picker').value = /^#[0-9a-f]{6}$/i.test(accent) ? accent : '#c8f542';
+    document.getElementById('t-accent-hex').value = accent;
+    renderSwatches();
+    updateNeonUI();
+    applyPreview();
+  }
+
+  function renderSwatches() {
+    const wrap = document.getElementById('swatches');
+    wrap.innerHTML = '';
+    PRESETS.forEach(col => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'swatch' + (col.toLowerCase() === (data.theme.accent||'').toLowerCase() ? ' active' : '');
+      b.style.background = col;
+      b.title = col;
+      b.onclick = () => { data.theme.accent = col; populateTheme(); };
+      wrap.appendChild(b);
+    });
+  }
+
+  function syncAccent(src) {
+    let val;
+    if (src === 'picker') {
+      val = document.getElementById('t-accent-picker').value;
+      document.getElementById('t-accent-hex').value = val;
+    } else {
+      val = document.getElementById('t-accent-hex').value.trim();
+      if (!val.startsWith('#')) val = '#' + val;
+      if (/^#[0-9a-f]{6}$/i.test(val)) document.getElementById('t-accent-picker').value = val;
+    }
+    data.theme.accent = val;
+    renderSwatches();
+    applyPreview();
+  }
+
+  function toggleNeon() {
+    data.theme.neon = !data.theme.neon;
+    updateNeonUI();
+  }
+
+  function updateNeonUI() {
+    const on = data.theme.neon !== false;
+    const btn = document.getElementById('t-neon');
+    btn.classList.toggle('on', on);
+    btn.setAttribute('aria-pressed', on);
+    document.getElementById('t-neon-label').textContent = on ? 'Neon ON' : 'Neon OFF';
+  }
+
+  /* live-preview the accent on the admin page itself */
+  function applyPreview() {
+    const accent = data.theme.accent || '#c8f542';
+    if (/^#[0-9a-f]{6}$/i.test(accent)) {
+      document.documentElement.style.setProperty('--accent', accent);
+    }
   }
 
   /* ── PROJECTS ── */
@@ -445,6 +587,10 @@
   /* ── COLLECT ── */
   function collectData() {
     return {
+      theme: {
+        accent: (data.theme && data.theme.accent) || '#c8f542',
+        neon: !(data.theme && data.theme.neon === false)
+      },
       projects: data.projects,
       skills: data.skills,
       contact: {
