@@ -1,7 +1,7 @@
 {
   "theme": {
     "accent": "#005980",
-    "neon": true
+    "neon": false
   },
   "projects": [
     {
@@ -57,28 +57,36 @@
       "thumb": "thumb-6",
       "url": "",
       "image": ""
+    },
+    {
+      "id": "1782497470880",
+      "tag": "RSVP Website",
+      "title": "Quincenera",
+      "desc": "A PAST project RSVP website designed for special events. Features include event details, an online RSVP form, countdown timer, photo gallery, schedule, and mobile-friendly design, making it easy for guests to stay informed and respond online.",
+      "url": "https://eduardoquirino290-art.github.io/Yathziry-Quirino-Alexandra-Garcia-quincenera/",
+      "image": ""
     }
   ],
   "skills": [
     {
       "label": "Visual Design",
-      "pct": 97
+      "pct": 100
     },
     {
       "label": "Web Development",
-      "pct": 82
+      "pct": 96
     },
     {
       "label": "Typography",
-      "pct": 91
+      "pct": 83
     },
     {
       "label": "Motion Design",
-      "pct": 74
+      "pct": 77
     },
     {
       "label": "Brand Strategy",
-      "pct": 68
+      "pct": 99
     }
   ],
   "contact": {
@@ -89,9 +97,9 @@
   },
   "hero": {
     "eyebrow": "Rocky Mount, NC — USA",
-    "heading1": "Design that",
-    "headingAccent": "moves",
-    "heading2": "people.",
+    "heading1": "Easy to understand",
+    "headingAccent": "website design",
+    "heading2": "for customers.",
     "desc": "A creative studio serving Rocky Mount and the surrounding region — websites, branding, and digital experiences built with care."
   },
   "about": {
