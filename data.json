@@ -1,4 +1,8 @@
 {
+  "theme": {
+    "accent": "#c8f542",
+    "neon": true
+  },
   "projects": [
     {
       "id": "001",
@@ -55,16 +59,27 @@
       "image": ""
     }
   ],
-  "theme": {
-    "accent": "#c8f542",
-    "neon": true
-  },
   "skills": [
-    { "label": "Visual Design",   "pct": 97 },
-    { "label": "Web Development", "pct": 82 },
-    { "label": "Typography",      "pct": 91 },
-    { "label": "Motion Design",   "pct": 74 },
-    { "label": "Brand Strategy",  "pct": 68 }
+    {
+      "label": "Visual Design",
+      "pct": 97
+    },
+    {
+      "label": "Web Development",
+      "pct": 82
+    },
+    {
+      "label": "Typography",
+      "pct": 91
+    },
+    {
+      "label": "Motion Design",
+      "pct": 74
+    },
+    {
+      "label": "Brand Strategy",
+      "pct": 68
+    }
   ],
   "contact": {
     "phone": "(252) 471-9451",
