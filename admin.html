@@ -195,6 +195,23 @@
     .save-msg { font-size: 0.75rem; color: var(--muted); }
     .save-right { display: flex; align-items: center; gap: 0.75rem; }
     #save-status { font-size: 0.78rem; color: var(--accent); display: none; }
+
+    /* ── TOKEN MODAL ── */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,0.72);
+      backdrop-filter: blur(4px);
+      display: none; align-items: center; justify-content: center; padding: 1.5rem;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 1.75rem; max-width: 430px; width: 100%;
+    }
+    .modal h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .modal .modal-sub { font-size: 0.8rem; color: var(--muted); margin-bottom: 1.25rem; line-height: 1.55; }
+    .modal .modal-sub a { color: var(--accent); }
+    .modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 0.25rem; }
   </style>
 </head>
 <body>
@@ -204,16 +221,13 @@
   <div class="login-box">
     <div class="login-logo">Rocky Mount Design Co.</div>
     <h1>Admin Login</h1>
-    <p class="sub">Manage site content, projects, and contact info.</p>
+    <p class="sub">Sign in with your password to manage content, projects, and appearance.</p>
 
     <label>Password</label>
     <input type="password" id="pw" placeholder="Enter admin password" />
 
-    <label>GitHub Token <span style="color:var(--muted);font-size:0.68rem">(repo scope — session only, never stored)</span></label>
-    <input type="password" id="tok" placeholder="github_pat_…" />
-
     <button class="btn btn-primary" onclick="login()" style="margin-top:0.5rem">Sign In →</button>
-    <p class="err" id="login-err">Incorrect password or token problem.</p>
+    <p class="err" id="login-err">Incorrect password.</p>
   </div>
 </div>
 
@@ -358,6 +372,24 @@
       <button class="btn btn-primary" style="width:auto" onclick="saveAll()">Save &amp; Publish</button>
     </div>
   </div>
+
+  <!-- TOKEN MODAL (only appears the first time you publish in a session) -->
+  <div class="modal-overlay" id="token-modal">
+    <div class="modal">
+      <h3>One-time publish key</h3>
+      <p class="modal-sub">
+        To save changes to the live site, paste a GitHub access token (repo scope) once.
+        It is kept only for this session and never stored permanently.
+        <a href="https://github.com/settings/tokens" target="_blank" rel="noopener">Get a token →</a>
+      </p>
+      <input type="password" id="modal-tok" placeholder="github_pat_…" />
+      <p class="err" id="modal-err">Token required to publish.</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeTokenModal(false)">Cancel</button>
+        <button class="btn btn-primary" style="width:auto" onclick="closeTokenModal(true)">Continue</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -367,16 +399,12 @@
 
   let token = '', data = null;
 
-  /* ── LOGIN ── */
+  /* ── LOGIN (password only — no token required) ── */
   function login() {
     const pw  = document.getElementById('pw').value.trim();
-    const tok = document.getElementById('tok').value.trim();
     const err = document.getElementById('login-err');
     const match = Object.entries(ADMINS).find(([,p]) => p === pw);
-    if (!match)  { err.style.display='block'; err.textContent='Incorrect password.'; return; }
-    if (!tok)    { err.style.display='block'; err.textContent='GitHub token required.'; return; }
-    token = tok;
-    sessionStorage.setItem('rm_tok', tok);
+    if (!match) { err.style.display='block'; err.textContent='Incorrect password.'; return; }
     sessionStorage.setItem('rm_usr', match[0]);
     err.style.display = 'none';
     initAdmin(match[0]);
@@ -387,18 +415,16 @@
     document.getElementById('login-screen').style.display = 'flex';
     document.getElementById('admin-screen').style.display = 'none';
     document.getElementById('pw').value = '';
-    document.getElementById('tok').value = '';
   }
 
-  ['pw','tok'].forEach(id =>
-    document.getElementById(id).addEventListener('keydown', e => { if (e.key==='Enter') login(); })
-  );
+  document.getElementById('pw').addEventListener('keydown', e => { if (e.key==='Enter') login(); });
 
-  /* auto-resume session */
+  /* auto-resume session (token re-used if still in session, otherwise asked at publish) */
   (() => {
-    const t = sessionStorage.getItem('rm_tok');
     const u = sessionStorage.getItem('rm_usr');
-    if (t && u) { token = t; initAdmin(u); }
+    const t = sessionStorage.getItem('rm_tok');
+    if (t) token = t;
+    if (u) initAdmin(u);
   })();
 
   /* ── INIT ── */
@@ -410,10 +436,10 @@
     populateAll();
   }
 
-  /* ── FETCH ── */
+  /* ── FETCH (public read — no token needed for a public repo) ── */
   async function fetchData() {
-    const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}`, {
-      headers: { Authorization: 'Bearer ' + token }
+    const res = await fetch(`https://api.github.com/repos/${REPO}/contents/${FILE}?ref=main&t=${Date.now()}`, {
+      headers: { 'Accept': 'application/vnd.github+json' }
     });
     const j = await res.json();
     const parsed = JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))));
@@ -614,8 +640,42 @@
     };
   }
 
+  /* ── TOKEN MODAL (asked only at publish time) ── */
+  let _tokenResolve = null;
+
+  function promptToken() {
+    return new Promise(resolve => {
+      const modal = document.getElementById('token-modal');
+      const input = document.getElementById('modal-tok');
+      document.getElementById('modal-err').style.display = 'none';
+      input.value = '';
+      modal.classList.add('open');
+      input.focus();
+      _tokenResolve = resolve;
+    });
+  }
+
+  function closeTokenModal(ok) {
+    const modal = document.getElementById('token-modal');
+    if (ok) {
+      const v = document.getElementById('modal-tok').value.trim();
+      if (!v) { document.getElementById('modal-err').style.display = 'block'; return; }
+      token = v;
+      sessionStorage.setItem('rm_tok', v);
+    }
+    modal.classList.remove('open');
+    if (_tokenResolve) { _tokenResolve(ok && !!token); _tokenResolve = null; }
+  }
+
+  document.getElementById('modal-tok').addEventListener('keydown', e => { if (e.key==='Enter') closeTokenModal(true); });
+
   /* ── SAVE ── */
   async function saveAll() {
+    if (!token) {
+      const ok = await promptToken();
+      if (!ok) return;
+    }
+
     const st = document.getElementById('save-status');
     st.style.display = 'inline';
     st.style.color = 'var(--accent)';
@@ -638,6 +698,11 @@
     } catch(e) {
       st.style.color = 'var(--danger)';
       st.textContent = '✗ ' + e.message;
+      // bad / expired token → forget it so the next publish asks again
+      if (/bad credentials|401|403|not found/i.test(e.message)) {
+        token = '';
+        sessionStorage.removeItem('rm_tok');
+      }
     }
   }
 </script>
